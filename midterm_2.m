@@ -298,7 +298,7 @@ while t<T
     
     display( ['max divergence = ',num2str(max(max(abs(div))))] )
     
-    surf(xp,yp,u)          
+    surf(xp,yp,u)
     xlabel('x')
     ylabel('y')
     zlabel('u') 

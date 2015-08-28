@@ -16,8 +16,8 @@ M(1).xs = 0;
 M(1).xf = Lx;
 M(1).ys = 0;
 M(1).yf = Ly;
-M(1).nx = 16;
-M(1).ny = 16;
+M(1).nx = 32;
+M(1).ny = 32;
 M(1).dx = (M(1).xf-M(1).xs)/M(1).nx;
 M(1).dy = (M(1).yf-M(1).ys)/M(1).ny;
 
@@ -25,8 +25,8 @@ M(2).xs = Lx/4;
 M(2).xf = Lx-Lx/4;
 M(2).ys = Ly/4;
 M(2).yf = Ly-Ly/4;
-M(2).nx = 16;
-M(2).ny = 16;
+M(2).nx = 32;
+M(2).ny = 32;
 M(2).dx = (M(2).xf-M(2).xs)/M(2).nx;
 M(2).dy = (M(2).yf-M(2).ys)/M(2).ny;
 
@@ -77,11 +77,11 @@ for nm = 1:2
     end
 end
 
-% plot rectangular array of cells
-pcolor(M(1).x,M(1).y,pad(M(1).p)); hold on
-pcolor(M(2).x,M(2).y,pad(M(2).p))
-axis square
-%colormap(hot(20))
+% % plot rectangular array of cells
+% pcolor(M(1).x,M(1).y,pad(M(1).p)); hold on
+% pcolor(M(2).x,M(2).y,pad(M(2).p))
+% axis square
+% %colormap(hot(20))
 
 % % compute finite volume (integral) cell divergence
 % for nm = 1:2
@@ -97,8 +97,6 @@ axis square
 % pcolor(M(1).x,M(1).y,pad(M(1).D)); hold on
 % pcolor(M(2).x,M(2).y,pad(M(2).D))
 % axis square
-% tightfig(gcf);
-% print(gcf,'-dpdf','spyA')
 % return
 
 % see locate_mesh.m for description of i_lo, i_hi, etc.
@@ -107,49 +105,52 @@ i_lo = index_list(1);
 i_hi = index_list(2);
 j_lo = index_list(3);
 j_hi = index_list(4);
-
 %return
 
 % build A matrix
 
-A = sparse(n_cells,n_cells);
+A = sparse(n_cells,n_cells)
 
 for row=1:n_cells
 
     % east face coefficients
 
     DX = 0.5 * ( M(cells(row).east_level).dx + M(cells(row).level).dx );
+    DY = min( M(cells(row).level).dy, M(cells(row).east_level).dy );
     NJ = find(cells(row).east_index>0);
-    for jj=1:NJ
-        A(row,row) = A(row,row) - 1/DX * M(cells(row).east_level).dy;
-        A(row,cells(row).east_index(jj)) = 1/DX * M(cells(row).east_level).dy;
+    for jj=NJ
+        A(row,row) = A(row,row) - 1/DX * DY;
+        A(row,cells(row).east_index(jj)) = 1/DX * DY;
     end
 
     % west face coefficients
 
     DX = 0.5 * ( M(cells(row).west_level).dx + M(cells(row).level).dx );
+    DY = min( M(cells(row).level).dy, M(cells(row).west_level).dy );
     NJ = find(cells(row).west_index>0);
-    for jj=1:NJ
-        A(row,row) = A(row,row) - 1/DX * M(cells(row).west_level).dy;
-        A(row,cells(row).west_index(jj)) = 1/DX * M(cells(row).west_level).dy;
+    for jj=NJ
+        A(row,row) = A(row,row) - 1/DX * DY;
+        A(row,cells(row).west_index(jj)) = 1/DX * DY;
     end
 
     % north face coefficients
 
     DY = 0.5 * ( M(cells(row).north_level).dy + M(cells(row).level).dy );
+    DX = min( M(cells(row).level).dx, M(cells(row).north_level).dx );
     NI = find(cells(row).north_index>0);
-    for ii=1:NI
-        A(row,row) = A(row,row) - 1/DY * M(cells(row).north_level).dx;
-        A(row,cells(row).north_index(ii)) = 1/DY * M(cells(row).north_level).dx;
+    for ii=NI
+        A(row,row) = A(row,row) - 1/DY * DX;
+        A(row,cells(row).north_index(ii)) = 1/DY * DX;
     end
 
     % south face coefficients
 
     DY = 0.5 * ( M(cells(row).south_level).dy + M(cells(row).level).dy );
+    DX = min( M(cells(row).level).dx, M(cells(row).south_level).dx );
     NI = find(cells(row).south_index>0);
-    for ii=1:NI
-        A(row,row) = A(row,row) - 1/DY * M(cells(row).south_level).dx;
-        A(row,cells(row).south_index(ii)) = 1/DY * M(cells(row).south_level).dx;
+    for ii=NI
+        A(row,row) = A(row,row) - 1/DY * DX;
+        A(row,cells(row).south_index(ii)) = 1/DY * DX;
     end
 
 end
@@ -160,6 +161,9 @@ end
 % full(A)
 % spy(A)
 % eig(full(A))
+% tightfig(gcf);
+% print(gcf,'-dpdf','spyA')
+% return
 
 while t<T % time loop
     
@@ -368,6 +372,25 @@ while t<T % time loop
         end
     end
 
+    % correct cells on coarse-fine interface
+
+    % this loop does all coarse cells under refinement region and along coarse-fine boundary
+    for i=i_lo:i_hi+1
+        ii = (i-i_lo)*rx + 1;
+        for j=j_lo:j_hi
+            jj = (j-j_lo)*ry*ones(1,ry) + [1:ry];
+            M(1).uhat(i,j) = mean( M(2).uhat(ii,jj) );
+        end
+    end
+
+    for j = j_lo:j_hi+1
+        jj = (j-j_lo)*ry + 1;
+        for i=i_lo:i_hi
+            ii = (i-i_lo)*rx*ones(1,rx) + [1:rx];
+            M(1).vhat(i,j) = mean( M(2).vhat(ii,jj) );
+        end
+    end
+
     % build right-hand-side of Poisson equation
 
     for nm=1:2
@@ -379,58 +402,17 @@ while t<T % time loop
         end
     end
 
-    % correct cells on coarse-fine interface
-
-    % east side
-    i = i_hi+1;
-    for j=j_lo:j_hi
-        M(1).D(i,j) = M(1).D(i,j) + M(1).uhat(i,j) * M(1).dy;
-        for nn=1:ry
-            jj = (j-j_lo)*ry + nn;
-            M(1).D(i,j) = M(1).D(i,j) - M(2).uhat(M(2).nx+1,jj) * M(2).dy;
-        end
-    end
-
-    % west side
-    i = i_lo-1;
-    for j=j_lo:j_hi
-        M(1).D(i,j) = M(1).D(i,j) - M(1).uhat(i+1,j) * M(1).dy;
-        for nn=1:ry
-            jj = (j-j_lo)*ry + nn;
-            M(1).D(i,j) = M(1).D(i,j) + M(2).uhat(1,jj) * M(2).dy;
-        end
-    end
-
-    % north side
-    j = j_hi+1;
-    for i=i_lo:i_hi
-        M(1).D(i,j) = M(1).D(i,j) + M(1).vhat(i,j) * M(1).dx;
-        for nn=1:rx
-            ii = (i-i_lo)*rx + nn;
-            M(1).D(i,j) = M(1).D(i,j) - M(2).vhat(ii,M(2).ny+1) * M(2).dx;
-        end
-    end
-
-    % south side
-    j = j_lo-1;
-    for i=i_lo:i_hi
-        M(1).D(i,j) = M(1).D(i,j) - M(1).vhat(i,j+1) * M(1).dx;
-        for nn=1:rx
-            ii = (i-i_lo)*rx + nn;
-            M(1).D(i,j) = M(1).D(i,j) + M(2).vhat(ii,1) * M(2).dx;
-        end
-    end
-
     % assemble cell divergence into RHS vector
 
     for row=1:n_cells
         b(row) = M(cells(row).level).D(imap(row),jmap(row));
     end
 
-    b = b-mean(b); % for discrete compatibility, b should have zero mean
-
-    % solve Poisson equation
-    pvec = A\b';
+    % solve Poisson equation for "condensed" system
+    Ac = A(1:n_cells-1,1:n_cells-1);
+    bc = b(1:n_cells-1);
+    pc = Ac\bc';
+    pvec = [pc;0];
     
     % map solution vector to computational indices
     for row=1:n_cells
@@ -508,6 +490,25 @@ while t<T % time loop
         M(2).v(ii,jj) = M(2).vhat(ii,jj) - ( M(2).p(ii,jj) - M(1).p(i,j_lo-1) ) / DY;
     end
 
+    % correct velocity components on coarse grid, restrict fine grid components
+
+    % this loop does all coarse cells under refinement region and along coarse-fine boundary
+    for i=i_lo:i_hi+1
+        ii = (i-i_lo)*rx + 1;
+        for j=j_lo:j_hi
+            jj = (j-j_lo)*ry*ones(1,ry) + [1:ry];
+            M(1).u(i,j) = mean( M(2).u(ii,jj) );
+        end
+    end
+
+    for j = j_lo:j_hi+1
+        jj = (j-j_lo)*ry + 1;
+        for i=i_lo:i_hi
+            ii = (i-i_lo)*rx*ones(1,rx) + [1:rx];
+            M(1).v(i,j) = mean( M(2).v(ii,jj) );
+        end
+    end
+
     % check divergence
 
     for nm=1:2
@@ -519,55 +520,19 @@ while t<T % time loop
         end
     end
 
-    % correct cells on coarse-fine interface
+    % % plot divergence
+    % hold off
+    % pcolor(M(1).x,M(1).y,pad(M(1).D)); hold on
+    % pcolor(M(2).x,M(2).y,pad(M(2).D))
+    % axis square
 
-    % east side
-    i = i_hi+1;
-    for j=j_lo:j_hi
-        M(1).D(i,j) = M(1).D(i,j) + M(1).u(i,j) * M(1).dy;
-        for nn=1:ry
-            jj = (j-j_lo)*ry + nn;
-            M(1).D(i,j) = M(1).D(i,j) - M(2).u(M(2).nx+1,jj) * M(2).dy;
-        end
-    end
+    display( ['max div M1 = ',num2str(max(max(abs(M(1).D)))),'   max div M2 = ',num2str(max(max(abs(M(2).D))))] )
 
-    % west side
-    i = i_lo-1;
-    for j=j_lo:j_hi
-        M(1).D(i,j) = M(1).D(i,j) - M(1).u(i+1,j) * M(1).dy;
-        for nn=1:ry
-            jj = (j-j_lo)*ry + nn;
-            M(1).D(i,j) = M(1).D(i,j) + M(2).u(1,jj) * M(2).dy;
-        end
-    end
-
-    % north side
-    j = j_hi+1;
-    for i=i_lo:i_hi
-        M(1).D(i,j) = M(1).D(i,j) + M(1).v(i,j) * M(1).dx;
-        for nn=1:rx
-            ii = (i-i_lo)*rx + nn;
-            M(1).D(i,j) = M(1).D(i,j) - M(2).v(ii,M(2).ny+1) * M(2).dx;
-        end
-    end
-
-    % south side
-    j = j_lo-1;
-    for i=i_lo:i_hi
-        M(1).D(i,j) = M(1).D(i,j) - M(1).v(i,j+1) * M(1).dx;
-        for nn=1:rx
-            ii = (i-i_lo)*rx + nn;
-            M(1).D(i,j) = M(1).D(i,j) + M(2).v(ii,1) * M(2).dx;
-        end
-    end
-
-    % plot divergence
-    hold off
-    pcolor(M(1).x,M(1).y,pad(M(1).D)); hold on
-    pcolor(M(2).x,M(2).y,pad(M(2).D))
-    axis square
-
-    return
+    subplot(1,2,1), surf(M(1).x,M(1).yc,M(1).u'), axis([0 Lx 0 Ly -1 3])
+    subplot(1,2,2), surf(M(2).x,M(2).yc,M(2).u'), axis([0 Lx 0 Ly -1 3])
+    
+    pause(0.001)
+    %return
 
 end % time loop
 

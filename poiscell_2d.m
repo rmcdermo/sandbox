@@ -213,13 +213,86 @@ bn(8) = ( u(4,2)*dy - un(3)*s - un(4)*s + (v(3,3) - v(3,2))*dx );
 
 bn
 
+% check 3D case
 
+% build A matrix
 
+n_cells = 14;
+A = sparse(n_cells,n_cells);
 
+% diagonal coefficients
+for i=1:8
+    A(i,i) = 3*s/de;
+end
+for i=9:14
+    A(i,i) = 4*s/de;
+end
 
+% connectivity
+A(1,9) = -s/de;
+A(1,12) = -s/de;
+A(1,13) = -s/de;
 
+A(2,9) = -s/de;
+A(2,10) = -s/de;
+A(2,13) = -s/de;
 
+A(3,10) = -s/de;
+A(3,11) = -s/de;
+A(3,13) = -s/de;
 
+A(4,11) = -s/de;
+A(4,12) = -s/de;
+A(4,13) = -s/de;
+
+A(5,9) = -s/de;
+A(5,12) = -s/de;
+A(5,14) = -s/de;
+
+A(6,9) = -s/de;
+A(6,10) = -s/de;
+A(6,14) = -s/de;
+
+A(7,10) = -s/de;
+A(7,11) = -s/de;
+A(7,14) = -s/de;
+
+A(8,11) = -s/de;
+A(8,12) = -s/de;
+A(8,14) = -s/de;
+
+A(9,1) = -s/de;
+A(9,2) = -s/de;
+A(9,5) = -s/de;
+A(9,6) = -s/de;
+
+A(10,2) = -s/de;
+A(10,3) = -s/de;
+A(10,6) = -s/de;
+A(10,7) = -s/de;
+
+A(11,3) = -s/de;
+A(11,4) = -s/de;
+A(11,7) = -s/de;
+A(11,8) = -s/de;
+
+A(12,1) = -s/de;
+A(12,4) = -s/de;
+A(12,5) = -s/de;
+A(12,8) = -s/de;
+
+A(13,1) = -s/de;
+A(13,2) = -s/de;
+A(13,3) = -s/de;
+A(13,4) = -s/de;
+
+A(14,5) = -s/de;
+A(14,6) = -s/de;
+A(14,7) = -s/de;
+A(14,8) = -s/de;
+
+figure(4)
+spy(full(A))
 
 
 

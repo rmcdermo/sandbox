@@ -19,41 +19,33 @@ close all
 clear all
 
 % define the grid
+
 Lx = 2*pi;
 nx = 32;
 dx = Lx/nx;
-xf = 0:dx:Lx;
+xf = [0:dx:Lx] + pi;
 xc = xf(1:nx) + 0.5*dx;
-x  = 2*pi*xc/Lx;
 
 % define the source term
-f = -sin(x); % implies solution of Poisson (u'' = f) is u = sin(x)
-y = dx^2 * f;
+
+fc = -sin(xc); % implies solution of Poisson (u'' = f) is u = sin(x)
 
 % periodic problem with variable source term
-% ------------------------------------------
+% note: f must be periodic on (0,Lx) for this to work
+% ---------------------------------------------------
 
 % step 1: analysis (determine fbar from inverse)
 
-ybar = fft_cc(y);
-
-% fvar=fft(f);
-
-% fbar2(1)=real(fvar(1));
-
-% for i=1:nx/2
-%     fbar2(2*i)  =real(fvar(i+1));
-%     fbar2(2*i+1)=imag(fvar(i+1));
-% end
-
-% return
+fbar = fft_cc(fc * dx^2);
 
 % step 2: solve
 
-ubar = solve_cc(ybar);
+ubar = solve_cc(fbar);
 
 % step 3: synthesis
 
-u = ifft_cc(ubar);
+uc = ifft_cc(ubar);
 
-plot(x,u,'o')
+plot(xc,uc,'o')
+
+

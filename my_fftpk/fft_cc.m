@@ -8,14 +8,14 @@ function [xbar] = fft_cc(x)
 
 n = length(x);
 if mod(n,2)==0
-    m = n/2. - 1; % n is even
+    m = n/2 - 1; % n is even
     n_even = 1;
 else
-    m = (n-1)/2.; % n is odd
+    m = (n-1)/2; % n is odd
     n_even = 0;
 end
 
-t = 2.*pi/n * [1:n];
+t = 2*pi/n * [1:n];
 
 xbar = zeros(1,n);
 xbar(1) = sum(x);
@@ -31,4 +31,4 @@ if n_even
     end
 end
 
-xbar = 2./n * xbar;
+xbar = 2/n * xbar;

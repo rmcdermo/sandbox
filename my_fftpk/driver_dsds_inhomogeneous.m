@@ -14,11 +14,6 @@ fc = -2*ones(1,nx);
 bxs = -3;
 bxf = 1;
 
-% % arbitrary linear grid function that satisfies bcs
-
-% dw = (bxf-bxs)/nx;
-% wc = (bxs+dw/2):dw:(bxf-dw/2);
-
 y = fc;
 y(1)  = fc(1)  - 2*bxs/dx^2;
 y(nx) = fc(nx) - 2*bxf/dx^2;
@@ -34,7 +29,6 @@ ubar = solve_dsds(fbar);
 % step 3: synthesis
 
 uc = ifft_dsds(ubar) * dx^2;
-%uc = uc + wc;
 
 plot(xc,uc,'o')
 

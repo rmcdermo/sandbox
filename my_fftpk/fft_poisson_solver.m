@@ -26,94 +26,11 @@ dx = Lx/nx;
 xf = [0:dx:Lx];
 xc = xf(1:nx) + 0.5*dx;
 
+test_case = 'dirichlet inhomogeneous'
 
-% % periodic problem with variable source term
-% % note: f must be periodic on (0,Lx) for this to work
-% % ---------------------------------------------------
-
-% % define the source term
-
-% fc = -sin(xc); % implies solution of Poisson (u'' = f) is u = sin(x)
-
-% % step 1: analysis (determine fbar from inverse)
-
-% fbar = fft_cc(fc);
-
-% % step 2: solve
-
-% ubar = solve_cc(fbar);
-
-% % step 3: synthesis
-
-% uc = ifft_cc(ubar) * dx^2;
-
-% plot(xc,uc,'o')
-
-% % check discrete solution of Poisson
-
-% for ii=1:nx
-%     im1=ii-1;
-%     ip1=ii+1;
-%     % periodic bcs
-%     if im1<1;  im1=im1+nx; end
-%     if ip1>nx; ip1=ip1-nx; end
-
-%     rc(ii) = ( uc(im1) - 2*uc(ii) + uc(ip1) )/dx^2 - fc(ii);
-% end
-% max(abs(rc))
-
-
-% DS-DS problem with variable source term
-% ---------------------------------------------------
-
-% define the source term
-
-fc = -sin(xc);
-bxs = 0;
-bxf = 0;
-
-% step 1: analysis (determine fbar from inverse)
-
-fbar = fft_dsds(fc);
-
-% step 2: solve
-
-ubar = solve_dsds(fbar);
-
-% step 3: synthesis
-
-uc = ifft_dsds(ubar) * dx^2;
-
-plot(xc,uc,'o')
-
-% check discrete solution of Poisson
-
-for ii=1:nx
-
-    % apply boundary conditions
-    if ii==1
-        uc_im1 = 2*bxs - uc(1);
-    else
-        uc_im1 = uc(ii-1);
-    end
-    if ii==nx
-        uc_ip1 = 2*bxf - uc(nx);
-    else
-        uc_ip1 = uc(ii+1);
-    end
-
-    rc(ii) = ( uc_im1 - 2*uc(ii) + uc_ip1 )/dx^2 - fc(ii);
+switch test_case
+    case 'periodic';                 driver_cc
+    case 'dirichlet homogeneous';    driver_dsds_homogeneous
+    case 'dirichlet inhomogeneous';  driver_dsds_inhomogeneous
 end
-max(abs(rc))
-
-
-
-
-
-
-
-
-
-
-
 

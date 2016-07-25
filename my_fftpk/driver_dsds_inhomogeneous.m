@@ -11,8 +11,8 @@
 fc = -2*ones(1,nx);
 %fc = -sin(xc);
 %fc = zeros(1,nx);
-bxs = 0;
-bxf = 0;
+bxs = -3;
+bxf = 1;
 
 % % arbitrary linear grid function that satisfies bcs
 

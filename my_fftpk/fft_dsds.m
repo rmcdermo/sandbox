@@ -16,4 +16,4 @@ for jj=1:n
     xbar(jj) = sum( x .* sin(t*jj) );
 end
 
-xbar = 2/n * xbar;
+xbar = 1/n * xbar;

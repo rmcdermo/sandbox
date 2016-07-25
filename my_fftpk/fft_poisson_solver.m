@@ -14,6 +14,9 @@
 % We will look at the case where y_i is non-zero (Poisson) and y_i = 0 (Laplace).
 % We will also look at *inhomogeneous* Dirichlet and Neumann boundaries on a
 % staggered grid, DS and NS boundaries in the Schumann-Sweet paper.
+%
+% CAUTION: Transforms from Schumann/Sweet paper do not work for arbitrary Dirichlet
+%          data on either side.  We use transforms from FLASH version of fftpack.f90.
 
 close all
 clear all

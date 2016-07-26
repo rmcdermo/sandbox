@@ -4,7 +4,7 @@
 %
 % backward transform (synthesis) for DS-DS bcs
 % taken from Schumann and Sweet Eq. (11)
-% note: error in last term in SS
+% note: error in last term in j summation is SS paper
 
 function [x] = ifft_dsds(xbar)
 
@@ -17,7 +17,7 @@ x = zeros(1,n);
 for ii=1:n
     x(ii) = 0;
     for jj=1:n-1
-        x(ii) = x(ii) + xbar(jj) * sin( (2*ii-1)*t*jj );
+        x(ii) = x(ii) + xbar(jj) * sin( (2*ii-1)*jj*t );
     end
-    x(ii) = x(ii) + (-1)^(ii-1) * xbar(n) / 2;
+    x(ii) = x(ii) + 0.5 * xbar(n) * (-1)^(ii-1);
 end

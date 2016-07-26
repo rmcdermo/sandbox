@@ -16,7 +16,7 @@ xbar = zeros(1,n);
 for jj=1:n
     xbar(jj) = 0;
     for ii=1:n
-        xbar(jj) = xbar(jj) + x(ii) * sin(t*(2*ii-1)*jj);
+        xbar(jj) = xbar(jj) + x(ii) * sin((2*ii-1)*jj*t);
     end
 end
 

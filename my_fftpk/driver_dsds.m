@@ -1,6 +1,6 @@
 % McDermott
 % 7-25-2016
-% driver_dsds_inhomogeneous.m
+% driver_dsds.m
 %
 % DS-DS problem with variable source term and
 % non-zero Dirichlet boundaries

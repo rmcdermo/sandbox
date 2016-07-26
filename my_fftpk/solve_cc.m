@@ -8,25 +8,29 @@ function [xbar] = solve_cc(ybar)
 
 n = length(ybar);
 if mod(n,2)==0
-    m = n/2. - 1; % n is even
+    m = n/2 - 1; % n is even
     n_even = 1;
 else
-    m = (n-1)/2.; % n is odd
+    m = (n-1)/2; % n is odd
     n_even = 0;
 end
+
 t = pi/n;
-lambda = zeros(1,n);
+
+xbar(1)   = 0;
+
 for jj=1:m
-    lambda(2*jj)   = sin(t*jj)^2;
-    lambda(2*jj+1) = lambda(2*jj);
-end
-if n_even
-    for ii=1:n
-        lambda(n) = 1.;
+    lambda = -4 * sin(jj*t)^2;
+    if lambda==0
+        xbar(2*jj)   = 0;
+        xbar(2*jj+1) = 0;
+    else
+        xbar(2*jj)   = ybar(2*jj)/lambda;
+        xbar(2*jj+1) = ybar(2*jj+1)/lambda;
     end
 end
-lambda = -4. * lambda;
 
-% solve
-xbar(2:n) = ybar(2:n)./lambda(2:n);
-xbar(1) = 0;
+if n_even
+    lambda = -4;
+    xbar(n) = ybar(n)/lambda;
+end

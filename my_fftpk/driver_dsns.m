@@ -1,33 +1,31 @@
 % McDermott
 % 7-26-2016
-% driver_nsns.m
+% driver_dsns.m
 %
-% NS-NS problem inhomogeneous boundaries
+% DS-NS problem inhomogeneous boundaries
 % ---------------------------------------------------
 
 % define the source term
 
-fc = zeros(1,nx);
-bxs = 2;
-bxf = -3;
+fc = -2*ones(1,nx);
+bxs = 5;
+bxf = -10;
 
 y = fc;
-y(1)  = fc(1)  + bxs/dx;
-y(nx) = fc(nx) - bxf/dx;
-
-pois_ptb = mean(y);
+y(1)  = fc(1) - 2*bxs/dx^2; % DS boundary
+y(nx) = fc(nx) - bxf/dx;    % NS boundary
 
 % step 1: analysis (determine fbar from inverse)
 
-fbar = fft_nsns(y);
+fbar = fft_dsns(y);
 
 % step 2: solve
 
-ubar = solve_nsns(fbar);
+ubar = solve_dsns(fbar);
 
 % step 3: synthesis
 
-uc = ifft_nsns(ubar) * dx^2;
+uc = ifft_dsns(ubar) * dx^2;
 
 plot(xc,uc,'o')
 
@@ -37,7 +35,7 @@ for ii=1:nx
 
     % apply boundary conditions
     if ii==1
-        uc_im1 = uc(1)  - bxs*dx;
+        uc_im1 = 2*bxs - uc(1);
     else
         uc_im1 = uc(ii-1);
     end
@@ -47,7 +45,7 @@ for ii=1:nx
         uc_ip1 = uc(ii+1);
     end
 
-    rc(ii) = ( uc_im1 - 2*uc(ii) + uc_ip1 )/dx^2 - fc(ii) + pois_ptb;
+    rc(ii) = ( uc_im1 - 2*uc(ii) + uc_ip1 )/dx^2 - fc(ii);
 end
 max(abs(rc))
 

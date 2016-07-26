@@ -16,7 +16,8 @@
 % staggered grid, DS and NS boundaries in the Schumann-Sweet paper.
 %
 % CAUTION: Transforms from Schumann/Sweet paper do not work for arbitrary Dirichlet
-%          data on either side.  We use transforms from FLASH version of fftpack.f90.
+%          data on either side (case 2).  We use transforms from FLASH version of 
+%          fftpack.f90.
 
 close all
 clear all
@@ -29,11 +30,12 @@ dx = Lx/nx;
 xf = [0:dx:Lx];
 xc = xf(1:nx) + 0.5*dx;
 
-test_case = 3
+test_case = 4
 
 switch test_case
     case 1; driver_cc
     case 2; driver_dsds
     case 3; driver_nsns
+    case 4; driver_dsns
 end
 

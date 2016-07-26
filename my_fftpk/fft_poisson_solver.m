@@ -29,11 +29,11 @@ dx = Lx/nx;
 xf = [0:dx:Lx];
 xc = xf(1:nx) + 0.5*dx;
 
-test_case = 'dirichlet inhomogeneous'
+test_case = 3
 
 switch test_case
-    case 'periodic';                 driver_cc
-    case 'dirichlet homogeneous';    driver_dsds_homogeneous
-    case 'dirichlet inhomogeneous';  driver_dsds_inhomogeneous
+    case 1; driver_cc
+    case 2; driver_dsds
+    case 3; driver_nsns
 end
 

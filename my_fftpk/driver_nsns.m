@@ -1,34 +1,34 @@
 % McDermott
-% 7-25-2016
-% driver_dsds.m
+% 7-26-2016
+% driver_nsns.m
 %
-% DS-DS problem with variable source term and
-% non-zero Dirichlet boundaries
+% NS-NS problem inhomogeneous boundaries
 % ---------------------------------------------------
 
 % define the source term
 
-%fc = -2*ones(1,nx);
-%fc = -sin(xc);
 fc = zeros(1,nx);
 bxs = -3;
-bxf = 1;
+bxf = -3;
 
 y = fc;
-y(1)  = fc(1)  - 2*bxs/dx^2;
-y(nx) = fc(nx) - 2*bxf/dx^2;
+y(1)  = fc(1)  + bxs/dx;
+y(nx) = fc(nx) - bxf/dx;
+
+pois_ptb = mean(y);
+y = y - pois_ptb;
 
 % step 1: analysis (determine fbar from inverse)
 
-fbar = fft_dsds(y);
+fbar = fft_nsns(y);
 
 % step 2: solve
 
-ubar = solve_dsds(fbar);
+ubar = solve_nsns(fbar);
 
 % step 3: synthesis
 
-uc = ifft_dsds(ubar) * dx^2;
+uc = ifft_nsns(ubar) * dx^2;
 
 plot(xc,uc,'o')
 
@@ -38,17 +38,17 @@ for ii=1:nx
 
     % apply boundary conditions
     if ii==1
-        uc_im1 = 2*bxs - uc(1);
+        uc_im1 = uc(1)  - bxs*dx;
     else
         uc_im1 = uc(ii-1);
     end
     if ii==nx
-        uc_ip1 = 2*bxf - uc(nx);
+        uc_ip1 = uc(nx) + bxf*dx;
     else
         uc_ip1 = uc(ii+1);
     end
 
-    rc(ii) = ( uc_im1 - 2*uc(ii) + uc_ip1 )/dx^2 - fc(ii);
+    rc(ii) = ( uc_im1 - 2*uc(ii) + uc_ip1 )/dx^2 - fc(ii) + pois_ptb;
 end
 max(abs(rc))
 

@@ -8,10 +8,13 @@ function [x] = ifft_nsns(xbar)
 
 n = length(xbar);
 
-t = pi/(2*n) * [0:n-1];
+t = pi/(2*n);
 
 x = zeros(1,n);
 
 for ii=1:n
-    x(ii) = sum( xbar .* cos( (2*ii-1)*t ) );
+    x(ii) = 0;
+    for jj=1:n
+        x(ii) = x(ii) + xbar(jj) * cos( (2*ii-1)*(jj-1)*t );
+    end
 end

@@ -8,12 +8,15 @@ function [xbar] = fft_nsns(x)
 
 n = length(x);
 
-t = (2*[1:n]-1)*pi/(2*n);
+t = pi/(2*n);
 
 xbar = zeros(1,n);
 
 for jj=1:n
-    xbar(jj) = sum( x .* cos(t*(jj-1)) );
+    xbar(jj) = 0;
+    for ii=1:n
+        xbar(jj) = xbar(jj) + x(ii) * cos( (2*ii-1)*(jj-1)*t );
+    end
 end
 
 xbar(1)   = 1/n * xbar(1);

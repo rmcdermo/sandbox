@@ -20,7 +20,7 @@ dx = Lx/nx;
 xf = [0:dx:Lx];
 xc = xf(1:nx) + 0.5*dx;
 
-test_case = 4
+test_case = 5
 
 switch test_case
     case 1; driver_cc

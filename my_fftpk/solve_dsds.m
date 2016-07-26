@@ -4,12 +4,12 @@
 %
 % solve eigenvalue system for DS-DS bcs
 
-function [xbar] = solve_dsds(ybar)
+function [xbar] = solve_dsds(ybar,dxdx)
 
 n = length(ybar);
 t = pi/(2*n);
 for jj=1:n
-    lambda = -4 * sin(jj*t)^2; % compute eigenvalue, SS Eq. (32)
+    lambda = -4 * sin(jj*t)^2 / dxdx; % compute eigenvalue, SS Eq. (32)
     if (lambda==0)
         xbar(jj) = 0;
     else

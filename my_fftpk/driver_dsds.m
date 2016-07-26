@@ -8,9 +8,9 @@
 
 % define the source term
 
-%fc = -2*ones(1,nx);
+fc = -2*ones(1,nx);
 %fc = -sin(xc);
-fc = zeros(1,nx);
+%fc = zeros(1,nx);
 bxs = -3;
 bxf = 1;
 
@@ -24,11 +24,11 @@ fbar = fft_dsds(y);
 
 % step 2: solve
 
-ubar = solve_dsds(fbar);
+ubar = solve_dsds(fbar,dx^2);
 
 % step 3: synthesis
 
-uc = ifft_dsds(ubar) * dx^2;
+uc = ifft_dsds(ubar);
 
 plot(xc,uc,'o')
 

@@ -4,7 +4,7 @@
 %
 % solve eigenvalue system for cyclic boundary conditions
 
-function [xbar] = solve_cc(ybar)
+function [xbar] = solve_cc(ybar,dxdx)
 
 n = length(ybar);
 if mod(n,2)==0
@@ -20,17 +20,17 @@ t = pi/n;
 xbar(1)   = 0;
 
 for jj=1:m
-    lambda = -4 * sin(jj*t)^2;
+    lambda = -4 * sin(jj*t)^2 / dxdx;
     if lambda==0
         xbar(2*jj)   = 0;
         xbar(2*jj+1) = 0;
     else
-        xbar(2*jj)   = ybar(2*jj)/lambda;
-        xbar(2*jj+1) = ybar(2*jj+1)/lambda;
+        xbar(2*jj)   = ybar(2*jj) / lambda;
+        xbar(2*jj+1) = ybar(2*jj+1) / lambda;
     end
 end
 
 if n_even
-    lambda = -4;
-    xbar(n) = ybar(n)/lambda;
+    lambda = -4 / dxdx;
+    xbar(n) = ybar(n) / lambda;
 end

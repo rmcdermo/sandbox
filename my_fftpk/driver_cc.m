@@ -16,11 +16,11 @@ fbar = fft_cc(fc);
 
 % step 2: solve
 
-ubar = solve_cc(fbar);
+ubar = solve_cc(fbar,dx^2);
 
 % step 3: synthesis
 
-uc = ifft_cc(ubar) * dx^2;
+uc = ifft_cc(ubar);
 
 plot(xc,uc,'o')
 

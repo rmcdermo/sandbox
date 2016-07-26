@@ -4,12 +4,12 @@
 %
 % solve eigenvalue system for NS-NS bcs
 
-function [xbar] = solve_nsns(ybar)
+function [xbar] = solve_nsns(ybar,dxdx)
 
 n = length(ybar);
 t = pi/(2*n);
 for jj=1:n
-    lambda = -4 * sin((jj-1)*t)^2; % compute eigenvalue, SS Eq. (33)
+    lambda = -4 * sin((jj-1)*t)^2 / dxdx; % compute eigenvalue, SS Eq. (33)
     if (lambda==0)
         xbar(jj) = 0;
     else

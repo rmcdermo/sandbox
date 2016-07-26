@@ -5,12 +5,12 @@
 % solve eigenvalue system for DS-NS (or NS-DS) bcs
 % Schumann and Sweet (JCP, 1988) Eq. (34)
 
-function [xbar] = solve_nsds(ybar)
+function [xbar] = solve_nsds(ybar,dxdx)
 
 n = length(ybar);
 t = pi/(4*n);
 for jj=1:n
-    lambda = -4 * sin((2*jj-1)*t)^2;
+    lambda = -4 * sin((2*jj-1)*t)^2 / dxdx;
     if (lambda==0)
         xbar(jj) = 0;
     else

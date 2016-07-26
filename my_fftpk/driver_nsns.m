@@ -23,11 +23,11 @@ fbar = fft_nsns(y);
 
 % step 2: solve
 
-ubar = solve_nsns(fbar);
+ubar = solve_nsns(fbar,dx^2);
 
 % step 3: synthesis
 
-uc = ifft_nsns(ubar) * dx^2;
+uc = ifft_nsns(ubar);
 
 plot(xc,uc,'o')
 

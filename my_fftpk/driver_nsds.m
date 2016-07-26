@@ -21,11 +21,11 @@ fbar = fft_nsds(y);
 
 % step 2: solve
 
-ubar = solve_nsds(fbar);
+ubar = solve_nsds(fbar,dx^2);
 
 % step 3: synthesis
 
-uc = ifft_nsds(ubar) * dx^2;
+uc = ifft_nsds(ubar);
 
 plot(xc,uc,'o')
 

@@ -10,26 +10,26 @@ n = size(ybar)
 
 if mod(n(1),2)==0
     m(1) = n(1)/2 - 1; % n(1) is even
-    n1_even = true;
+    n_even(1) = true;
 else
     m(1) = (n(1)-1)/2; % n(1) is odd
-    n1_even = false;
+    n_even(1) = false;
 end
 
 if mod(n(2),2)==0
     m(2) = n(2)/2 - 1; % n(2) is even
-    n2_even = true;
+    n_even(2) = true;
 else
     m(2) = (n(2)-1)/2; % n(2) is odd
-    n2_even = false;
+    n_even(2) = false;
 end
 
 t = pi/n;
 
 xbar(1) = 0;
-for jj=1:m(2)
-    lambda_y = -4 * sin(jj*t)^2 / dxdx;
-    if lambda==0
+for jj=1:m
+    lam_1 = -4 * sin(jj*t)^2 / dd(1);
+    if lam_1==0
         xbar(2*jj)   = 0;
         xbar(2*jj+1) = 0;
     else

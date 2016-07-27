@@ -1,6 +1,6 @@
 % McDermott
 % 7-22-2016
-% fft_poisson_solver.m
+% fft_poisson_1d.m
 %
 % This code is a test bed for learning how to solve Poisson using FFT following
 %

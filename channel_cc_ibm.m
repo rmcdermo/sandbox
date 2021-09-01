@@ -10,23 +10,23 @@ clear all
 
 Lx = 2; % channel dimension in x
 Ly = 1; % channel dimension in y
-nx = 16; % number of pcells in x
-ny = 8; % number of pcells in y
+nx = 32; % number of pcells in x
+ny = 16; % number of pcells in y
 dx = Lx/nx; % uniform grid spacing in x
 dy = Ly/ny; % uniform grid spacing in y
 dxdx = dx^2;
 dydy = dy^2;
 U_INLET = 1; % inlet velocity
 nu = 1e-5; % kinematic viscosity (1/Re)
-Fo = 0.5; % Fourier number
-CFL = 0.5; % Courant number
+Fo = 0.25; % Fourier number
+CFL = 0.25; % Courant number
 T = 10; % total simulation time
 
 % For the CC_IBM test, let's blank out cells on the top and bottom
 % of the channel.
 
 ncc = 2; % number of completely solid cells on top and bottom of channel
-cfa = 1; % cutface area factor
+cfa_area_fac = 0.5; % cutface area factor
 
 % STAGGERED GRID ARRANGEMENT:
 %
@@ -96,14 +96,14 @@ end
 celltype = ones(nx+1,ny+1); % pad this array for later use with pcolor output
 facextype = ones(nx+1,ny);
 faceytype = ones(nx,ny+1);
-if ncc>0
-    celltype(:,1:ncc) = 0;
-    celltype(:,(ny-ncc+1):ny+1) = 0;
 
-    % cutcells
-    celltype(:,ncc+1) = cfa;
-    celltype(:,ny-ncc) = cfa;
-end
+celltype(:,1:ncc) = 0;
+celltype(:,(ny-ncc+1):ny+1) = 0;
+
+% cutcells
+celltype(:,ncc+1) = cfa_area_fac;
+celltype(:,ny-ncc) = cfa_area_fac;
+
 for i=1:nx
     for j=1:ny
         if celltype(i,j)==0
@@ -111,7 +111,8 @@ for i=1:nx
             faceytype(i,j) = 0; faceytype(i,j+1) = 0;
         end
         if celltype(i,j)>0 & celltype(i,j)<1
-            facextype(i,j) = cfa; facextype(i+1,j) = cfa;  % cutface in x direction
+            facextype(i,j)   = cfa_area_fac;
+            facextype(i+1,j) = cfa_area_fac;  % cutface in x direction
             if j<floor(ny/2)
                 faceytype(i,j) = 0; faceytype(i,j+1) = 1;  % bottom of cell is solid, top is a regular gas face
             else
@@ -127,9 +128,6 @@ Z0 = ones(1,ny);
 for j=1:ny
     U0(j)=U_INLET*facextype(1,j);
     u(1,j)=U0(j);
-    if facextype(1,j)==0
-        Z0(j)=0;
-    end
 end
 
 % node-centered grid
@@ -147,24 +145,34 @@ A = build_sparse_matrix_mixed([nx ny],[dx dy],[0 2 0 0]);
 
 % Main time step loop
 t = 0;
-%T = 1e-6;
+T = 2;
 while t<T
 
-    dt_dif = Fo/(nu*(1/dxdx+1/(dydy*cfa^2))) % time step based on Fourier number
+    dt_dif = Fo/(nu*(1/dxdx+1/(dydy))) % time step based on Fourier number
     velmax = max([max(abs(U0)),max(max(abs(u))),max(max(abs(v)))])
-    dt_adv = CFL*min(dx,dy*cfa)/velmax % time step based on CFL
+    dt_adv = CFL*min(dx,dy)/velmax % time step based on CFL
     dt = min([dt_dif,dt_adv]) % time step used in Forward Euler integrator
     t = t+dt
 
     % scalar fluxes (Godunov)
-    FZX(1,:)=Z0.*u(1,:);
+    for j=1:ny
+        FZX(1,j)=0;
+        if facextype(1,j)>0;
+            FZX(1,j)=Z0(j)*U0(j)/facextype(1,j);
+        end
+    end
     for j=1:ny
         for i=2:nx+1
-            if u(i,j)>=0
-                FZX(i,j)=Z(i-1,j)*u(i,j);
+            if facextype(i,j)>0
+                cfa_vel = u(i,j)/facextype(i,j);
+            else
+                cfa_vel = u(i,j);
+            end
+            if cfa_vel>=0
+                FZX(i,j)=Z(i-1,j)*cfa_vel;
             else
                 if i<=nx
-                    FZX(i,j)=Z(i,j)*u(i,j);
+                    FZX(i,j)=Z(i,j)*cfa_vel;
                 else
                     FZX(i,j)=0; % assume no tracer from outlet side
                 end
@@ -300,7 +308,11 @@ while t<T
     % build source (Poisson right-hand-side)
     for j = 1:ny
         for i = 1:nx
-            b(i,j) = ( ( u_hat(i+1,j)-u_hat(i,j) )/dx + ( v_hat(i,j+1)-v_hat(i,j) )/dy ) / dt;
+            if celltype(i,j)>0
+                b(i,j) = ( ( u_hat(i+1,j)/facextype(i+1,j)-u_hat(i,j)/facextype(i,j) )/dx + ( v_hat(i,j+1)-v_hat(i,j) )/dy ) / dt;
+            else
+                b(i,j) = ( ( u_hat(i+1,j)-u_hat(i,j) )/dx + ( v_hat(i,j+1)-v_hat(i,j) )/dy ) / dt;
+            end
         end
 
         % apply Dirichlet bcs to outflow
@@ -337,7 +349,11 @@ while t<T
     % project velocities
     for j = 1:ny
         for i = 2:nx
-            u(i,j) = u_hat(i,j) - dt*( H(i,j)-H(i-1,j) )/dx;
+            if facextype(i,j)>0
+                u(i,j) = u_hat(i,j) - dt*( H(i,j)-H(i-1,j) )/dx * facextype(i,j);
+            else
+                u(i,j) = u_hat(i,j) - dt*( H(i,j)-H(i-1,j) )/dx;
+            end
         end
         % apply inflow bc
         u(1,j) = u_hat(1,j);
@@ -347,7 +363,11 @@ while t<T
         else
             HNXP1(j) = -H(nx,j);
         end
-        u(nx+1,j) = u_hat(nx+1,j) - dt*( HNXP1(j)-H(nx,j) )/dx;
+        if facextype(nx+1,j)>0
+            u(nx+1,j) = u_hat(nx+1,j) - dt*( HNXP1(j)-H(nx,j) )/dx * facextype(nx+1,j);
+        else
+            u(nx+1,j) = u_hat(nx+1,j) - dt*( HNXP1(j)-H(nx,j) )/dx;
+        end
     end
     for j = 2:ny
         for i = 1:nx
@@ -358,7 +378,11 @@ while t<T
     % check divergence
     for j = 1:ny
         for i = 1:nx
-            b(i,j) = ( u(i+1,j)-u(i,j) )/dx + ( v(i,j+1)-v(i,j) )/dy;
+            if celltype(i,j)>0
+                b(i,j) = ( u(i+1,j)/facextype(i+1,j)-u(i,j)/facextype(i,j) )/dx + ( v(i,j+1)-v(i,j) )/dy;
+            else
+                b(i,j) = ( u(i+1,j)-u(i,j) )/dx + ( v(i,j+1)-v(i,j) )/dy;
+            end
         end
     end
     % u
@@ -369,7 +393,11 @@ while t<T
     % interpolate velocities to cell centers
     for j = 1:ny
         for i = 1:nx
-            up(i,j) = 0.5*( u(i+1,j)+u(i,j) );
+            if celltype(i,j)>0
+                up(i,j) = 0.5*( u(i+1,j)/facextype(i+1,j)+u(i,j)/facextype(i,j) );
+            else
+                up(i,j) = 0.5*( u(i+1,j)+u(i,j) );
+            end
             vp(i,j) = 0.5*( v(i,j+1)+v(i,j) );
         end
     end

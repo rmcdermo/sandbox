@@ -10,8 +10,8 @@ clear all
 
 Lx = 2; % channel dimension in x
 Ly = 1; % channel dimension in y
-nx = 16; % number of pcells in x
-ny = 8; % number of pcells in y
+nx = 32; % number of pcells in x
+ny = 16; % number of pcells in y
 dx = Lx/nx; % uniform grid spacing in x
 dy = Ly/ny; % uniform grid spacing in y
 VCELL= dx*dy;
@@ -26,7 +26,7 @@ T = 10; % total simulation time
 % For the CC_IBM test, let's blank out cells on the top and bottom
 % of the channel.
 
-ncc = 0; % number of completely solid cells on top and bottom of channel
+ncc = 2; % number of completely solid cells on top and bottom of channel
 cfa_area_fac = .5; % cutface area factor
 
 % STAGGERED GRID ARRANGEMENT:
@@ -89,6 +89,7 @@ H1 = zeros(nx,ny);
 H2 = zeros(nx,ny);
 b_vec = zeros(nx*ny,1);
 HNXP1 = zeros(1,ny);
+HBC = zeros(1,ny);
 
 % cell-centered grid
 x = linspace(dx/2,Lx-dx/2,nx);
@@ -294,7 +295,7 @@ while t<T
         % outlet boundary forcing
         if celltype(nx,j)==0
             Fu_visc = 0;
-            Fx = (0 - u(nx+1,j))/dt - ( HNXP1(j)-H2(nx,j) )/dx;
+            Fx = (0 - u(nx+1,j))/dt - ( HNXP1(j)-H1(nx,j) )/dx;
         else
             Fu_visc = 0;
             vnorth = v(nx,j+1);
@@ -318,7 +319,7 @@ while t<T
             % immersed boundary forcing
             if (j<round(ny/2) & celltype(i,j-1)==0) | (j>round(ny/2) & celltype(i,j)==0)
                 Fv_visc = 0;
-                Fy = (0 - v(i,j))/dt - ( (H1(i,j)+H2(i,j))-(H1(i,j-1)+H2(i,j-1)) )/dy;
+                Fy = (0 - v(i,j))/dt - ( H1(i,j)-H1(i,j-1) )/dy;
             end
 
             v_hat(i,j) = v(i,j) + dt*(Fy + Fv_visc);
@@ -332,9 +333,12 @@ while t<T
         end
 
         % apply Dirichlet bcs to outflow
-        if u(nx+1,j)>0
-            b(nx,j) = b(nx,j) - 2*kres(nx,j)/dxdx;
+        if u_hat(nx+1,j)>0
+            HBC(j) = kres(nx,j);
+        else
+            HBC(j) = 0;
         end
+        b(nx,j) = b(nx,j) - 2*HBC(j)/dxdx;
     end
 
     % map b to source vector
@@ -370,11 +374,7 @@ while t<T
         % apply inflow bc
         us(1,j) = u_hat(1,j);
         % apply outflow bc
-        if u(nx+1,j)>0
-            HNXP1(j) = 2*kres(nx,j) - H1(nx,j);
-        else
-            HNXP1(j) = -H1(nx,j);
-        end
+        HNXP1(j) = 2*HBC(j) - H1(nx,j);
         us(nx+1,j) = u_hat(nx+1,j) - dt*( HNXP1(j)-H1(nx,j) )/dx * alphx(nx+1,j);
     end
     for j = 2:ny
@@ -398,6 +398,16 @@ while t<T
         for i = 1:nx
             b(i,j) = ( (us(i+1,j)-us(i,j))/dx + (vs(i,j+1)-vs(i,j))/dy ) / dt;
         end
+
+        % apply Dirichlet bcs to outflow
+        if us(nx+1,j)>0
+            ubar = 0.5*(us(nx,j)+us(nx+1,j));
+            vbar = 0.5*(vs(nx,j)+vs(nx,j+1));
+            HBC(j) = 0.5*(ubar^2 + vbar^2);
+        else
+            HBC(j) = 0;
+        end
+        b(nx,j) = b(nx,j) - 2*HBC(j)/dxdx;
     end
 
     % map b to source vector
@@ -433,7 +443,7 @@ while t<T
         % apply inflow bc
         u(1,j) = us(1,j);
         % apply outflow bc
-        HNXP1(j) = -H2(nx,j);
+        HNXP1(j) = 2*HBC(j) - H2(nx,j);
         u(nx+1,j) = us(nx+1,j) - dt*( HNXP1(j)-H2(nx,j) )/dx;
     end
     for j = 2:ny
